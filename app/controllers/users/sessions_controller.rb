@@ -6,16 +6,16 @@ class Users::SessionsController < Devise::SessionsController
 
   private
 
-  def respond_with(resource, _opt = {})
-    @token = request.env["warden-jwt_auth.token"]
-    headers["Authorization"] = @token
+  def respond_with(current_user, _opt = {})
+    # @token = request.env["warden-jwt_auth.token"]
+    # headers["Authorization"] = @token
 
     render json: {
       status: {
         code: 200, message: "Logged in successfully.",
-        token: @token,
+        # token: @token,
         data: {
-          user: UserSerializer.new(resource).serializable_hash[:data][:attributes]
+          user: UserSerializer.new(current_user).serializable_hash[:data][:attributes]
         }
       }
     }, status: :ok
@@ -23,9 +23,9 @@ class Users::SessionsController < Devise::SessionsController
 
   def respond_to_on_destroy
     if request.headers["Authorization"].present?
-      jwt_payload = JWT.decode(request.headers["Authorization"].split.last,
+      jwt_payload = JWT.decode(request.headers["Authorization"].split(" ").last,
       Rails.application.credentials.devise_jwt_secret_key!).first
-      current_user = User.find(jwt_payload["sub"])
+      current_user = User.find_by(id: jwt_payload["sub"], jti: jwt_payload["jti"])
     end
 
     if current_user

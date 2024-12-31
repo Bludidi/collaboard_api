@@ -7,5 +7,6 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :jwt_authenticatable, jwt_revocation_strategy: self
 
-  has_many :created_projects, class_name: "Project", foreign_key: "created_by_id"
+  has_many :user_projects
+  has_many :projects, through: :user_projects
 end
